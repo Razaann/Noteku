@@ -48,44 +48,35 @@ const App = () => {
                     style={{ flex: 1 }}>
 
                     {/* Text component for the app title */}
-                    <Text style={{ color: "blue", fontSize: 30, marginTop: 50, backgroundColor:"lightgrey", borderRadius: 10, textAlign: "center",}}>
+                    <Text style={{ fontFamily: "monospace", color: "blue", fontSize: 30, marginTop: 50, backgroundColor:"lightgrey", borderRadius: 10, textAlign: "center",}}>
                         Noteku
                     </Text>
 
                     {/* RichToolbar component for text formatting actions */}
                     <RichToolbar style={{ marginTop: 10}}
-                                  editor={richText}
+                                    editor={richText}
 
                         // Connect the RichToolbar 
                         // to the RichEditor
-                        actions={[ actions.setBold,
-                                    actions.insertBulletsList,
-                                    actions.insertOrderedList,
-                                    actions.insertLink,
-                                    actions.setStrikethrough,
-                                    actions.setItalic,
-                                    actions.setUnderline,
-                                    actions.heading1,]}
+                        actions={[ actions.setBold, actions.insertBulletsList, actions.insertOrderedList, actions.insertLink, actions.setStrikethrough, actions.setItalic, actions.setUnderline, actions.heading1,]}
 
                         // Define available text 
                         // formatting actions
                         iconMap={{[actions.heading1]:handleHead,}} />
 
                     {/* Text component for description */}
-                    <Text style={{ fontFamily: "monospace",
-                                    fontWeight: 900,
-                                    fontSize: 15,
-                                    padding: 10}}>
-                        {/* Description: */}
+                    <Text style={{fontFamily: "monospace", fontWeight: 900, fontSize: 15, padding: 10}}>
+                        Description:
                     </Text>
 
                     {/* RichEditor component for text editing */}
-                    <RichEditor ref={richText}
-                                onChange={(descriptionText) => {
-
-                            // Handle the change in
-                            // the editor's content
-                            console.log("descriptionText:",descriptionText);}} />
+                    <RichEditor 
+                        ref={richText}
+                        editorStyle={{contentCSSText: 'text-align: justify;'}}
+                        onChange={(descriptionText) => {
+                            console.log("descriptionText:", descriptionText);
+                        }} 
+                    />
                 </KeyboardAvoidingView>
             </ScrollView>
         </SafeAreaView>
