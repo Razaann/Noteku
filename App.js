@@ -62,7 +62,7 @@ const EditorScreen = ({ route, navigation }) => {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#222" }}>
             <View style={styles.editorHeader}>
                 <TextInput
                     placeholder="Title..."
@@ -87,7 +87,12 @@ const EditorScreen = ({ route, navigation }) => {
                         initialContentHTML={descHTML}
                         placeholder="Start writing your note here..."
                         onChange={descriptionText => setDescHTML(descriptionText)}
-                        style={{ minHeight: 300 }}
+                        style={{ minHeight: 300, backgroundColor: "#222", color: "white" }}
+                        editorStyle={{
+                            backgroundColor: '#222',
+                            color: 'white',
+                            placeholderColor: 'gray',
+                        }}
                     />
                 </KeyboardAvoidingView>
             </ScrollView>
@@ -167,12 +172,12 @@ const App = () => {
 
 // --- STYLES ---
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#f0f0f0' },
-    appTitle: { fontSize: 30, fontWeight: 'bold', color: 'blue', marginBottom: 20, textAlign: 'center', marginTop: 30 },
+    container: { flex: 1, padding: 20, backgroundColor: '#222222' },
+    appTitle: { fontSize: 30, fontWeight: 'bold', color: 'white', marginBottom: 20, textAlign: 'center', marginTop: 30 },
     
     // Grid Styles
     gridItem: {
-        backgroundColor: 'white',
+        backgroundColor: 'black', // Card background
         width: '48%', // Approximately half width for 2 columns
         marginBottom: 15,
         padding: 15,
@@ -183,16 +188,16 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
     },
-    noteTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 5 },
+    noteTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 5, color: 'white' },
     noteDate: { fontSize: 10, color: 'gray', marginBottom: 5 },
-    notePreview: { fontSize: 12, color: '#555' },
+    notePreview: { fontSize: 12, color: '#b6b6b6ff' },
     emptyText: { textAlign: 'center', marginTop: 50, fontSize: 16, color: 'gray' },
 
     // Editor Styles
-    editorHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, alignItems: 'center', backgroundColor: '#f8f8f8' },
-    titleInput: { fontSize: 20, fontWeight: 'bold', flex: 1 },
-    saveBtn: { backgroundColor: 'blue', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 5 },
-    saveBtnText: { color: 'white', fontWeight: 'bold' },
+    editorHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, alignItems: 'center', backgroundColor: '#000000ff' },
+    titleInput: { fontSize: 20, fontWeight: 'bold', flex: 1, color: 'white' },
+    saveBtn: { backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 5 },
+    saveBtnText: { color: 'black', fontWeight: 'bold' },
 
     // FAB Styles
     fab: {
