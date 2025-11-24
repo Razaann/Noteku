@@ -10,16 +10,14 @@ import { actions, RichEditor, RichToolbar } from "react-native-pell-rich-editor"
 
 const Stack = createStackNavigator();
 
-// --- SCREEN 1: THE EDITOR (Your modified code) ---
+// --- SCREEN 1: THE EDITOR ---
 const EditorScreen = ({ route, navigation }) => {
     const richText = React.useRef();
-    // If we are editing an existing note, get its data
     const { noteToEdit } = route.params || {}; 
     
     const [title, setTitle] = useState(noteToEdit ? noteToEdit.title : "");
     const [descHTML, setDescHTML] = useState(noteToEdit ? noteToEdit.content : "");
 
-    // Load content into editor once it mounts
     useEffect(() => {
         if (noteToEdit && richText.current) {
             richText.current.setContentHTML(noteToEdit.content);
@@ -40,11 +38,9 @@ const EditorScreen = ({ route, navigation }) => {
         };
 
         try {
-            // 1. Get existing notes
             const existingNotes = await AsyncStorage.getItem('NOTES');
             let notes = existingNotes ? JSON.parse(existingNotes) : [];
 
-            // 2. Update or Add
             if (noteToEdit) {
                 const index = notes.findIndex(n => n.id === noteToEdit.id);
                 notes[index] = newNote;
@@ -52,12 +48,34 @@ const EditorScreen = ({ route, navigation }) => {
                 notes.push(newNote);
             }
 
-            // 3. Save back to storage
             await AsyncStorage.setItem('NOTES', JSON.stringify(notes));
-            navigation.goBack(); // Go back to Home
+            navigation.navigate("Home"); // more robust than goBack
         } catch (e) {
             console.error(e);
         }
+    };
+
+    const handleDelete = async () => {
+        Alert.alert(
+            "Delete Note",
+            "Are you sure you want to delete this note?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete", style: "destructive", onPress: async () => {
+                        try {
+                            const existingNotes = await AsyncStorage.getItem('NOTES');
+                            let notes = existingNotes ? JSON.parse(existingNotes) : [];
+                            notes = notes.filter(n => n.id !== noteToEdit.id);
+                            await AsyncStorage.setItem('NOTES', JSON.stringify(notes));
+                            navigation.navigate("Home");
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     return (
@@ -68,17 +86,29 @@ const EditorScreen = ({ route, navigation }) => {
                     style={styles.titleInput}
                     value={title}
                     onChangeText={setTitle}
+                    placeholderTextColor="#888"
                 />
                 <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
                     <Text style={styles.saveBtnText}>Save</Text>
                 </TouchableOpacity>
+                {noteToEdit && (
+                    <TouchableOpacity
+                        onPress={handleDelete}
+                        style={[styles.saveBtn, { backgroundColor: 'red', marginLeft: 10 }]}
+                    >
+                        <Text style={[styles.saveBtnText, { color: 'white' }]}>Delete</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             <ScrollView>
                 <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
                     <RichToolbar
                         editor={richText}
-                        actions={[actions.setBold, actions.insertBulletsList, actions.insertOrderedList, actions.setItalic, actions.setUnderline, actions.heading1]}
+                        actions={[
+                            actions.setBold, actions.insertBulletsList, actions.insertOrderedList, actions.setItalic,
+                            actions.setUnderline, actions.heading1
+                        ]}
                         iconMap={{ [actions.heading1]: ({ tintColor }) => (<Text style={{ color: tintColor }}>H1</Text>) }}
                     />
                     <RichEditor
@@ -88,6 +118,7 @@ const EditorScreen = ({ route, navigation }) => {
                         onChange={descriptionText => setDescHTML(descriptionText)}
                         style={{ minHeight: 300, backgroundColor: "#222", color: "white" }}
                         editorStyle={{
+                            cssText: 'body { text-align: justify; }',
                             backgroundColor: '#222',
                             color: 'white',
                             placeholderColor: 'gray',
@@ -103,7 +134,6 @@ const EditorScreen = ({ route, navigation }) => {
 const HomeScreen = ({ navigation }) => {
     const [notes, setNotes] = useState([]);
 
-    // Load notes whenever this screen comes into focus
     useFocusEffect(
         useCallback(() => {
             getNotes();
@@ -126,7 +156,6 @@ const HomeScreen = ({ navigation }) => {
         >
             <Text style={styles.noteTitle} numberOfLines={1}>{item.title}</Text>
             <Text style={styles.noteDate}>{item.date}</Text>
-            {/* We strip HTML tags for preview roughly, or just show "View Note" */}
             <Text style={styles.notePreview} numberOfLines={3}>
                 {item.content.replace(/<[^>]+>/g, '')} 
             </Text>
@@ -138,14 +167,13 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.appTitle}>Noteku</Text>
             <FlatList
                 data={notes}
-                numColumns={2} // THIS MAKES IT A GRID
+                numColumns={2}
                 keyExtractor={item => item.id}
                 renderItem={renderNoteItem}
                 columnWrapperStyle={{ justifyContent: 'space-between' }}
                 contentContainerStyle={{ paddingBottom: 100 }}
                 ListEmptyComponent={<Text style={styles.emptyText}>No notes yet. Create one!</Text>}
             />
-            
             {/* Floating Action Button (FAB) */}
             <TouchableOpacity 
                 style={styles.fab} 
@@ -173,16 +201,14 @@ const App = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 20, backgroundColor: '#222222' },
     appTitle: { fontSize: 30, fontWeight: 'bold', color: 'white', marginBottom: 20, textAlign: 'center', marginTop: 30 },
-    
-    // Grid Styles
     gridItem: {
-        backgroundColor: 'black', // Card background
-        width: '48%', // Approximately half width for 2 columns
+        backgroundColor: 'black',
+        width: '48%',
         marginBottom: 15,
         padding: 15,
         borderRadius: 10,
-        elevation: 3, // Shadow for Android
-        shadowColor: '#000', // Shadow for iOS
+        elevation: 3,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -191,19 +217,15 @@ const styles = StyleSheet.create({
     noteDate: { fontSize: 10, color: 'gray', marginBottom: 5 },
     notePreview: { fontSize: 12, color: '#b6b6b6ff' },
     emptyText: { textAlign: 'center', marginTop: 50, fontSize: 16, color: 'gray' },
-
-    // Editor Styles
-    editorHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, alignItems: 'center', backgroundColor: '#000000ff' },
+    editorHeader: { flexDirection: 'row', justifyContent: 'flex-start', padding: 15, alignItems: 'center', backgroundColor: '#000000ff' },
     titleInput: { fontSize: 20, fontWeight: 'bold', flex: 1, color: 'white' },
     saveBtn: { backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 5 },
     saveBtnText: { color: 'black', fontWeight: 'bold' },
-
-    // FAB Styles
     fab: {
         position: 'absolute',
         right: 20,
         bottom: 30,
-        backgroundColor: 'blue',
+        backgroundColor: 'white',
         width: 60,
         height: 60,
         borderRadius: 30,
@@ -211,7 +233,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         elevation: 5,
     },
-    fabText: { fontSize: 30, color: 'white', marginTop: -3 }
+    fabText: { fontSize: 30, color: 'black', marginTop: -3 }
 });
 
 export default App;
