@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { 
-    Text, View, StyleSheet, TouchableOpacity, FlatList, 
-    SafeAreaView, TextInput, Alert, KeyboardAvoidingView, 
-    Platform, ScrollView 
+    Text, View, StyleSheet, TouchableOpacity, FlatList, TextInput, Alert, KeyboardAvoidingView, Platform, ScrollView 
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationContainer, useFocusEffect } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
