@@ -168,21 +168,24 @@ const HomeScreen = ({ navigation }) => {
     const getNotes = async () => {
         try {
             const storedNotes = await AsyncStorage.getItem('NOTES');
-            if (storedNotes) setNotes(JSON.parse(storedNotes));
+            if (storedNotes) setNotes(JSON.parse(storedNotes).reverse()); // .reverse() shows newest first
         } catch (e) {
             console.error(e);
         }
     };
 
-    const renderNoteItem = ({ item }) => (
+    // Helper to render a single card
+    const renderCard = (item) => (
         <TouchableOpacity 
+            key={item.id} 
             style={styles.gridItem} 
             onPress={() => navigation.navigate('Editor', { noteToEdit: item })}
         >
-            <Text style={styles.noteTitle} numberOfLines={1}>{item.title}</Text>
+            <Text style={styles.noteTitle}>{item.title}</Text>
             <Text style={styles.noteDate}>{item.date}</Text>
-            <Text style={styles.notePreview} numberOfLines={3}>
-                {item.content.replace(/<[^>]+>/g, '')} 
+            {/* Allow up to 10 lines so the height varies based on content */}
+            <Text style={styles.notePreview} numberOfLines={10}>
+                {item.content.replace(/<[^>]+>/g, '').trim()} 
             </Text>
         </TouchableOpacity>
     );
@@ -190,15 +193,26 @@ const HomeScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.appTitle}>Noteku</Text>
-            <FlatList
-                data={notes}
-                numColumns={2}
-                keyExtractor={item => item.id}
-                renderItem={renderNoteItem}
-                columnWrapperStyle={{ justifyContent: 'space-between' }}
-                contentContainerStyle={{ paddingBottom: 100 }}
-                ListEmptyComponent={<Text style={styles.emptyText}>No notes yet. Create one!</Text>}
-            />
+            
+            <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+                {notes.length === 0 ? (
+                    <Text style={styles.emptyText}>No notes yet. Create one!</Text>
+                ) : (
+                    // THE MASONRY LAYOUT
+                    <View style={styles.masonryContainer}>
+                        {/* LEFT COLUMN (Even Index: 0, 2, 4...) */}
+                        <View style={styles.column}>
+                            {notes.filter((_, i) => i % 2 === 0).map(renderCard)}
+                        </View>
+
+                        {/* RIGHT COLUMN (Odd Index: 1, 3, 5...) */}
+                        <View style={styles.column}>
+                            {notes.filter((_, i) => i % 2 !== 0).map(renderCard)}
+                        </View>
+                    </View>
+                )}
+            </ScrollView>
+
             <TouchableOpacity 
                 style={styles.fab} 
                 onPress={() => navigation.navigate('Editor')}
@@ -222,38 +236,48 @@ const App = () => {
 };
 
 // Styling
+// --- REPLACE YOUR STYLES ---
 const styles = StyleSheet.create({
-    // Main Background: Pure Black (So the #222222 items stand out)
+    // Main Background
     container: { flex: 1, padding: 20, backgroundColor: '#222222' }, 
     
-    appTitle: { fontSize: 30, fontWeight: 'bold', color: 'white', marginBottom: 20, textAlign: 'center', marginTop: 30 },
+    appTitle: { fontSize: 30, fontWeight: 'bold', color: 'white', marginBottom: 20, textAlign: 'center', marginTop: 10 },
     
-    // Note Cards: #222222
+    // Masonry Layout Styles (NEW)
+    masonryContainer: {
+        flexDirection: 'row',   // Arrange columns side by side
+        justifyContent: 'space-between',
+    },
+    column: {
+        flex: 1,                // Each column takes 50% width
+        marginHorizontal: 5,    // Gap between columns
+    },
+
+    // Note Cards
     gridItem: {
-        backgroundColor: '#000000', // UPDATED
-        width: '48%',
-        marginBottom: 15,
+        backgroundColor: '#000000ff',
+        marginBottom: 15,       // Space between cards vertically
         padding: 15,
-        borderRadius: 10,
+        borderRadius: 12,       // Slightly rounder
         elevation: 3,
-        shadowColor: '#fff', // Changed shadow to white so it glows slightly
+        shadowColor: '#fff', 
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
     },
     noteTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 5, color: 'white' },
-    noteDate: { fontSize: 10, color: 'gray', marginBottom: 5 },
-    notePreview: { fontSize: 12, color: '#b6b6b6ff' },
+    noteDate: { fontSize: 10, color: '#666', marginBottom: 8 },
+    notePreview: { fontSize: 13, color: '#b6b6b6ff', lineHeight: 20 }, // Added lineHeight for readability
     
     emptyText: { textAlign: 'center', marginTop: 50, fontSize: 16, color: 'gray' },
     
-    // Header Bar: #222222
+    // Header Bar
     editorHeader: { 
         flexDirection: 'row', 
         justifyContent: 'flex-start', 
         padding: 15, 
         alignItems: 'center', 
-        backgroundColor: '#222222' // UPDATED
+        backgroundColor: '#222222' 
     },
     
     titleInput: { fontSize: 20, fontWeight: 'bold', flex: 1, color: 'white' },
@@ -271,6 +295,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 5,
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
     },
     fabText: { fontSize: 30, color: 'black', marginTop: -3 }
 });
