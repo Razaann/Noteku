@@ -49,7 +49,7 @@ const EditorScreen = ({ route, navigation }) => {
             }
 
             await AsyncStorage.setItem('NOTES', JSON.stringify(notes));
-            navigation.navigate("Home"); // more robust than goBack
+            navigation.navigate("Home"); 
         } catch (e) {
             console.error(e);
         }
@@ -79,7 +79,8 @@ const EditorScreen = ({ route, navigation }) => {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#222" }}>
+        // Changed to Pure Black so the #222222 header stands out
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#000000" }}>
             <View style={styles.editorHeader}>
                 <TextInput
                     placeholder="Title..."
@@ -94,14 +95,14 @@ const EditorScreen = ({ route, navigation }) => {
                 {noteToEdit && (
                     <TouchableOpacity
                         onPress={handleDelete}
-                        style={[styles.saveBtn, { backgroundColor: 'red', marginLeft: 10 }]}
+                        style={[styles.saveBtn, { backgroundColor: '#cf1b1b', marginLeft: 10 }]}
                     >
                         <Text style={[styles.saveBtnText, { color: 'white' }]}>Delete</Text>
                     </TouchableOpacity>
                 )}
             </View>
 
-            <ScrollView>
+            <ScrollView style={{ backgroundColor: '#222222' }}>
                 <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
                     <RichToolbar
                         editor={richText}
@@ -110,16 +111,17 @@ const EditorScreen = ({ route, navigation }) => {
                             actions.setUnderline, actions.heading1
                         ]}
                         iconMap={{ [actions.heading1]: ({ tintColor }) => (<Text style={{ color: tintColor }}>H1</Text>) }}
+                        style={{ backgroundColor: '#333' }} // Slightly lighter for toolbar
                     />
                     <RichEditor
                         ref={richText}
                         initialContentHTML={descHTML}
                         placeholder="Start writing your note here..."
                         onChange={descriptionText => setDescHTML(descriptionText)}
-                        style={{ minHeight: 300, backgroundColor: "#222", color: "white" }}
+                        style={{ minHeight: 300, backgroundColor: "#222222" }}
                         editorStyle={{
                             cssText: 'body { text-align: justify; }',
-                            backgroundColor: '#222',
+                            backgroundColor: '#222222', // UPDATED
                             color: 'white',
                             placeholderColor: 'gray',
                         }}
@@ -174,7 +176,6 @@ const HomeScreen = ({ navigation }) => {
                 contentContainerStyle={{ paddingBottom: 100 }}
                 ListEmptyComponent={<Text style={styles.emptyText}>No notes yet. Create one!</Text>}
             />
-            {/* Floating Action Button (FAB) */}
             <TouchableOpacity 
                 style={styles.fab} 
                 onPress={() => navigation.navigate('Editor')}
@@ -185,7 +186,7 @@ const HomeScreen = ({ navigation }) => {
     );
 };
 
-// --- MAIN APP: NAVIGATION SETUP ---
+// Main App
 const App = () => {
     return (
         <NavigationContainer>
@@ -197,30 +198,45 @@ const App = () => {
     );
 };
 
-// --- STYLES ---
+// Styling
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#222222' },
+    // Main Background: Pure Black (So the #222222 items stand out)
+    container: { flex: 1, padding: 20, backgroundColor: '#222222' }, 
+    
     appTitle: { fontSize: 30, fontWeight: 'bold', color: 'white', marginBottom: 20, textAlign: 'center', marginTop: 30 },
+    
+    // Note Cards: #222222
     gridItem: {
-        backgroundColor: 'black',
+        backgroundColor: '#000000', // UPDATED
         width: '48%',
         marginBottom: 15,
         padding: 15,
         borderRadius: 10,
         elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowColor: '#fff', // Changed shadow to white so it glows slightly
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowRadius: 2,
     },
     noteTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 5, color: 'white' },
     noteDate: { fontSize: 10, color: 'gray', marginBottom: 5 },
     notePreview: { fontSize: 12, color: '#b6b6b6ff' },
+    
     emptyText: { textAlign: 'center', marginTop: 50, fontSize: 16, color: 'gray' },
-    editorHeader: { flexDirection: 'row', justifyContent: 'flex-start', padding: 15, alignItems: 'center', backgroundColor: '#000000ff' },
+    
+    // Header Bar: #222222
+    editorHeader: { 
+        flexDirection: 'row', 
+        justifyContent: 'flex-start', 
+        padding: 15, 
+        alignItems: 'center', 
+        backgroundColor: '#222222' // UPDATED
+    },
+    
     titleInput: { fontSize: 20, fontWeight: 'bold', flex: 1, color: 'white' },
     saveBtn: { backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 5 },
     saveBtnText: { color: 'black', fontWeight: 'bold' },
+    
     fab: {
         position: 'absolute',
         right: 20,
