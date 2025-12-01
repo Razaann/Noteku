@@ -12,6 +12,7 @@ import * as ImagePicker from 'expo-image-picker';
 const Stack = createStackNavigator();
 
 // Note Functionality
+// --- REPLACE YOUR EditorScreen COMPONENT ---
 const EditorScreen = ({ route, navigation }) => {
     const richText = React.useRef();
     const { noteToEdit } = route.params || {}; 
@@ -25,26 +26,19 @@ const EditorScreen = ({ route, navigation }) => {
         }
     }, []);
 
-    // --- NEW: FUNCTION TO PICK IMAGE ---
+    // --- IMAGE PICKER FUNCTION ---
     const handleAddImage = async () => {
-        // 1. Open the phone's gallery
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'], // Updated specifically for Expo Image Picker
-            allowsEditing: true,    // Lets user crop/zoom before selecting
-            base64: true,           // CRITICAL: We need the image as code, not a file path
-            quality: 0.5,           // Compress image (0.0 to 1.0) to prevent lag
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            base64: true,
+            quality: 0.5,
         });
 
-        // 2. If user picked an image
         if (!result.canceled) {
             const imageAsset = result.assets[0];
             const base64String = `data:image/jpeg;base64,${imageAsset.base64}`;
-
-            // 3. Insert into editor
-            // 'width: 100%; height: auto;' -> This locks the ratio and fills width!
             richText.current?.insertImage(base64String, 'width: 100%; height: auto;');
-            
-            // Optional: Add a new line after image so typing is easier
             richText.current?.insertHTML('<br />');
         }
     };
@@ -54,7 +48,6 @@ const EditorScreen = ({ route, navigation }) => {
             Alert.alert("Error", "Please give your note a title!");
             return;
         }
-
         const newNote = {
             id: noteToEdit ? noteToEdit.id : Date.now().toString(),
             title: title,
@@ -72,34 +65,29 @@ const EditorScreen = ({ route, navigation }) => {
             } else {
                 notes.push(newNote);
             }
-
             await AsyncStorage.setItem('NOTES', JSON.stringify(notes));
             navigation.navigate("Home"); 
         } catch (e) {
             console.error(e);
-            Alert.alert("Error", "Could not save note (Image might be too big!)");
+            Alert.alert("Error", "Could not save note.");
         }
     };
 
     const handleDelete = async () => {
-        Alert.alert(
-            "Delete Note",
-            "Are you sure?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete", style: "destructive", onPress: async () => {
-                        try {
-                            const existingNotes = await AsyncStorage.getItem('NOTES');
-                            let notes = existingNotes ? JSON.parse(existingNotes) : [];
-                            notes = notes.filter(n => n.id !== noteToEdit.id);
-                            await AsyncStorage.setItem('NOTES', JSON.stringify(notes));
-                            navigation.navigate("Home");
-                        } catch (e) { console.error(e); }
-                    }
+        Alert.alert("Delete Note", "Are you sure?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete", style: "destructive", onPress: async () => {
+                    try {
+                        const existingNotes = await AsyncStorage.getItem('NOTES');
+                        let notes = existingNotes ? JSON.parse(existingNotes) : [];
+                        notes = notes.filter(n => n.id !== noteToEdit.id);
+                        await AsyncStorage.setItem('NOTES', JSON.stringify(notes));
+                        navigation.navigate("Home");
+                    } catch (e) { console.error(e); }
                 }
-            ]
-        );
+            }
+        ]);
     };
 
     return (
@@ -127,22 +115,22 @@ const EditorScreen = ({ route, navigation }) => {
 
             <ScrollView style={{ backgroundColor: '#222222' }}>
                 <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-                    {/* UPDATED TOOLBAR */}
+                    {/* --- UPDATED TOOLBAR WITH UNDO, REDO, CHECKBOX --- */}
                     <RichToolbar
                         editor={richText}
-                        // Added actions.insertImage to the list
                         actions={[
+                            actions.undo,
+                            actions.redo,
                             actions.setBold, 
                             actions.setItalic,
-                            actions.setUnderline,
+                            actions.setUnderline, 
+                            actions.heading1,
                             actions.insertBulletsList, 
                             actions.insertOrderedList, 
-                            actions.insertImage,
-                            actions.heading1
+                            actions.checkboxList,
+                            actions.insertImage,      
                         ]}
-                        // Connect the image button to our function
                         onPressAddImage={handleAddImage} 
-                        
                         iconMap={{ [actions.heading1]: ({ tintColor }) => (<Text style={{ color: tintColor }}>H1</Text>) }}
                         style={{ backgroundColor: '#333' }} 
                     />
@@ -158,7 +146,7 @@ const EditorScreen = ({ route, navigation }) => {
                             backgroundColor: '#222222',
                             color: 'white',
                             placeholderColor: 'gray',
-                            contentCSSText: 'img { width: 100%; height: auto; }' // Extra safety for images
+                            contentCSSText: 'img { width: 100%; height: auto; }' 
                         }}
                     />
                 </KeyboardAvoidingView>
