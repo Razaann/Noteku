@@ -10,7 +10,7 @@ import { actions, RichEditor, RichToolbar } from "react-native-pell-rich-editor"
 
 const Stack = createStackNavigator();
 
-// --- SCREEN 1: THE EDITOR ---
+// Note Functionality
 const EditorScreen = ({ route, navigation }) => {
     const richText = React.useRef();
     const { noteToEdit } = route.params || {}; 
@@ -130,7 +130,7 @@ const EditorScreen = ({ route, navigation }) => {
     );
 };
 
-// --- SCREEN 2: THE HOME (Grid UI) ---
+// Homepage UI
 const HomeScreen = ({ navigation }) => {
     const [notes, setNotes] = useState([]);
 
