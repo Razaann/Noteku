@@ -7,6 +7,7 @@ import { NavigationContainer, useFocusEffect } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { actions, RichEditor, RichToolbar } from "react-native-pell-rich-editor";
+import * as ImagePicker from 'expo-image-picker';
 
 const Stack = createStackNavigator();
 
@@ -23,6 +24,30 @@ const EditorScreen = ({ route, navigation }) => {
             richText.current.setContentHTML(noteToEdit.content);
         }
     }, []);
+
+    // --- NEW: FUNCTION TO PICK IMAGE ---
+    const handleAddImage = async () => {
+        // 1. Open the phone's gallery
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'], // Updated specifically for Expo Image Picker
+            allowsEditing: true,    // Lets user crop/zoom before selecting
+            base64: true,           // CRITICAL: We need the image as code, not a file path
+            quality: 0.5,           // Compress image (0.0 to 1.0) to prevent lag
+        });
+
+        // 2. If user picked an image
+        if (!result.canceled) {
+            const imageAsset = result.assets[0];
+            const base64String = `data:image/jpeg;base64,${imageAsset.base64}`;
+
+            // 3. Insert into editor
+            // 'width: 100%; height: auto;' -> This locks the ratio and fills width!
+            richText.current?.insertImage(base64String, 'width: 100%; height: auto;');
+            
+            // Optional: Add a new line after image so typing is easier
+            richText.current?.insertHTML('<br />');
+        }
+    };
 
     const handleSave = async () => {
         if (!title.trim()) {
@@ -52,13 +77,14 @@ const EditorScreen = ({ route, navigation }) => {
             navigation.navigate("Home"); 
         } catch (e) {
             console.error(e);
+            Alert.alert("Error", "Could not save note (Image might be too big!)");
         }
     };
 
     const handleDelete = async () => {
         Alert.alert(
             "Delete Note",
-            "Are you sure you want to delete this note?",
+            "Are you sure?",
             [
                 { text: "Cancel", style: "cancel" },
                 {
@@ -69,9 +95,7 @@ const EditorScreen = ({ route, navigation }) => {
                             notes = notes.filter(n => n.id !== noteToEdit.id);
                             await AsyncStorage.setItem('NOTES', JSON.stringify(notes));
                             navigation.navigate("Home");
-                        } catch (e) {
-                            console.error(e);
-                        }
+                        } catch (e) { console.error(e); }
                     }
                 }
             ]
@@ -79,7 +103,6 @@ const EditorScreen = ({ route, navigation }) => {
     };
 
     return (
-        // Changed to Pure Black so the #222222 header stands out
         <SafeAreaView style={{ flex: 1, backgroundColor: "#000000" }}>
             <View style={styles.editorHeader}>
                 <TextInput
@@ -104,26 +127,38 @@ const EditorScreen = ({ route, navigation }) => {
 
             <ScrollView style={{ backgroundColor: '#222222' }}>
                 <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+                    {/* UPDATED TOOLBAR */}
                     <RichToolbar
                         editor={richText}
+                        // Added actions.insertImage to the list
                         actions={[
-                            actions.setBold, actions.insertBulletsList, actions.insertOrderedList, actions.setItalic,
-                            actions.setUnderline, actions.heading1
+                            actions.setBold, 
+                            actions.setItalic,
+                            actions.setUnderline,
+                            actions.insertBulletsList, 
+                            actions.insertOrderedList, 
+                            actions.insertImage,
+                            actions.heading1
                         ]}
+                        // Connect the image button to our function
+                        onPressAddImage={handleAddImage} 
+                        
                         iconMap={{ [actions.heading1]: ({ tintColor }) => (<Text style={{ color: tintColor }}>H1</Text>) }}
-                        style={{ backgroundColor: '#333' }} // Slightly lighter for toolbar
+                        style={{ backgroundColor: '#333' }} 
                     />
+                    
                     <RichEditor
                         ref={richText}
                         initialContentHTML={descHTML}
-                        placeholder="Start writing your note here..."
+                        placeholder="Start writing..."
                         onChange={descriptionText => setDescHTML(descriptionText)}
                         style={{ minHeight: 300, backgroundColor: "#222222" }}
                         editorStyle={{
                             cssText: 'body { text-align: justify; }',
-                            backgroundColor: '#222222', // UPDATED
+                            backgroundColor: '#222222',
                             color: 'white',
                             placeholderColor: 'gray',
+                            contentCSSText: 'img { width: 100%; height: auto; }' // Extra safety for images
                         }}
                     />
                 </KeyboardAvoidingView>
