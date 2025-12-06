@@ -574,11 +574,6 @@ const HomeScreen = ({ navigation }) => {
   const renderNoteCard = (note, index) => {
     // Use theme-aware colors
     const cardColor = theme.noteColors[note.category] || theme.cardBg;
-
-    // Determine text color based on card color.
-    // If it's a "colored" note in dark mode, text should be dark for contrast if color is bright,
-    // OR light if we dimmed the note color.
-    // For simplicity: If card is "All" (generic), use theme text. Else use dark text (as notes are pastel).
     const textColor = note.category === "All" ? theme.text : "#111111";
     const dateColor =
       note.category === "All" ? theme.textSecondary : "rgba(0,0,0,0.5)";
@@ -601,7 +596,16 @@ const HomeScreen = ({ navigation }) => {
       }
     }
 
-    const textPreview = note.content.replace(/<[^>]+>/g, "").trim();
+    // Improved HTML to Text conversion with Bullet Support
+    const textPreview = note.content
+      .replace(/<li>/gi, "• ") // Replace <li> with bullet point
+      .replace(/<\/li>/gi, "\n") // Replace </li> with newline
+      .replace(/<br\s*\/?>/gi, "\n") // Replace <br> with newline
+      .replace(/<\/p>/gi, "\n") // Replace </p> with newline
+      .replace(/<\/div>/gi, "\n") // Replace </div> with newline
+      .replace(/<[^>]+>/g, "") // Strip remaining tags
+      .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
+      .trim();
 
     return (
       <TouchableOpacity
