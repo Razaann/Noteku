@@ -574,7 +574,12 @@ const HomeScreen = ({ navigation }) => {
   const renderNoteCard = (note, index) => {
     // Use theme-aware colors
     const cardColor = theme.noteColors[note.category] || theme.cardBg;
-    const textColor = note.category === "All" ? theme.text : "#111111";
+    const paletteTextColors = {
+      Work: "#5C4A00",
+      Ideas: "#6B3D5A",
+      "To-Do": "#2C5C5C",
+    };
+    const textColor = note.category === "All" ? theme.text : paletteTextColors[note.category] || theme.text;
     const dateColor =
       note.category === "All" ? theme.textSecondary : "rgba(0,0,0,0.5)";
 
@@ -790,9 +795,9 @@ const HomeScreen = ({ navigation }) => {
                   : styles.categoryChipInactive,
                 {
                   borderColor:
-                    selectedCategory === cat ? theme.text : theme.borderColor,
+                    selectedCategory === cat ? palette.primaryBlue : theme.borderColor,
                   backgroundColor:
-                    selectedCategory === cat ? theme.text : theme.cardBg,
+                    selectedCategory === cat ? palette.primaryBlue : theme.cardBg,
                 },
               ]}
               onPress={() => setSelectedCategory(cat)}
@@ -802,7 +807,7 @@ const HomeScreen = ({ navigation }) => {
                   styles.categoryChipText,
                   {
                     color:
-                      selectedCategory === cat ? theme.bg : theme.textSecondary,
+                      selectedCategory === cat ? "#FFFFFF" : theme.textSecondary,
                   },
                 ]}
               >
