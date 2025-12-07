@@ -387,7 +387,7 @@ const EditorScreen = ({ route, navigation }) => {
                 { backgroundColor: theme.text, borderColor: theme.text },
               ]}
             />
-            <Text style={[styles.categoryText, { color: theme.text }]}>
+            <Text style={[styles.categoryText, { color: theme.text, fontFamily: fontFamily }]}>
               {category}
             </Text>
             <ChevronDown size={16} color={theme.textSecondary} />
@@ -407,6 +407,7 @@ const EditorScreen = ({ route, navigation }) => {
                     style={{
                       color:
                         category === cat ? palette.primaryBlue : theme.text,
+                      fontFamily: fontFamily,
                     }}
                   >
                     {cat}
@@ -436,7 +437,7 @@ const EditorScreen = ({ route, navigation }) => {
         <View style={{ flex: 1, paddingHorizontal: 24 }}>
           <TextInput
             placeholder="Title"
-            style={[styles.titleInput, { color: theme.text }]}
+            style={[styles.titleInput, { color: theme.text, fontFamily: fontFamilyBold }]}
             value={title}
             onChangeText={setTitle}
             placeholderTextColor={theme.textSecondary}
@@ -746,7 +747,7 @@ const HomeScreen = ({ navigation }) => {
               { backgroundColor: theme.cardBg, borderColor: theme.borderColor },
             ]}
           >
-            <Text style={[styles.menuTitle, { color: theme.text }]}>
+            <Text style={[styles.menuTitle, { color: theme.text, fontFamily: fontFamilyBold }]}>
               Appearance
             </Text>
 
@@ -758,7 +759,7 @@ const HomeScreen = ({ navigation }) => {
               }}
             >
               <Sun size={20} color={theme.text} />
-              <Text style={[styles.menuText, { color: theme.text }]}>
+              <Text style={[styles.menuText, { color: theme.text, fontFamily: fontFamily }]}>
                 Light Mode
               </Text>
               {theme.mode === "light" && <View style={styles.activeDot} />}
@@ -772,7 +773,7 @@ const HomeScreen = ({ navigation }) => {
               }}
             >
               <Moon size={20} color={theme.text} />
-              <Text style={[styles.menuText, { color: theme.text }]}>
+              <Text style={[styles.menuText, { color: theme.text, fontFamily: fontFamily }]}>
                 Dark Mode
               </Text>
               {theme.mode === "dark" && <View style={styles.activeDot} />}
@@ -1007,7 +1008,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   categoryDot: { width: 6, height: 6, borderRadius: 3, borderWidth: 1 },
-  categoryText: { fontSize: 14, fontWeight: "600" },
+  categoryText: { fontSize: 14, fontWeight: "600", fontFamily: fontFamily },
   dropdownMenu: {
     position: "absolute",
     top: 40,
@@ -1023,7 +1024,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   dropdownItem: { paddingVertical: 10, paddingHorizontal: 16 },
-  titleInput: { fontSize: 32, fontWeight: "800", marginVertical: 10 },
+  titleInput: { fontSize: 32, fontWeight: "800", marginVertical: 10, fontFamily: fontFamilyBold },
   dateText: { fontSize: 13, fontWeight: "500", marginBottom: 20 , fontFamily: fontFamily },
   floatingToolbarContainer: {
     marginHorizontal: 16,
@@ -1096,14 +1097,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     elevation: 10,
   },
-  menuTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15 },
+  menuTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15, fontFamily: fontFamilyBold },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
     gap: 10,
   },
-  menuText: { fontSize: 16, fontWeight: "500" },
+  menuText: { fontSize: 16, fontWeight: "500", fontFamily: fontFamily },
   activeDot: {
     width: 8,
     height: 8,
