@@ -30,6 +30,14 @@
       "eas": {
         "projectId": "961850ab-c63e-4132-8d0a-9499c5edd9e6"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": ["node_modules/@expo-google-fonts/outfit/Outfit_400Regular.ttf", "node_modules/@expo-google-fonts/outfit/Outfit_700Bold.ttf"]
+        }
+      ]
+    ]
   }
 }

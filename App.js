@@ -32,6 +32,10 @@ import {
   RichToolbar,
 } from "react-native-pell-rich-editor";
 import * as ImagePicker from "expo-image-picker";
+import * as Font from "expo-font";
+import {
+  Outfit_400Regular, Outfit_700Bold,
+} from "@expo-google-fonts/outfit";
 import {
   Menu,
   Search,
@@ -78,6 +82,14 @@ const themes = {
     cardBg: "#FFFFFF",
     text: "#111111",
     textSecondary: "#666666",
+    fontFamily: Platform.select({
+      android: "Outfit-Regular",
+      ios: "Outfit-Regular",
+    }),
+    fontFamilyBold: Platform.select({
+      android: "Outfit-Bold",
+      ios: "Outfit-Bold",
+    }),
     inputBg: "#FFFFFF",
     toolbarBg: "#1F2128",
     toolbarIcon: "#888",
@@ -95,6 +107,14 @@ const themes = {
     cardBg: "#1E1E1E",
     text: "#FFFFFF",
     textSecondary: "#AAAAAA",
+        fontFamily: Platform.select({
+      android: "Outfit-Regular",
+      ios: "Outfit-Regular", // Ensure the font is linked correctly
+    }),
+    fontFamilyBold: Platform.select({
+      android: "Outfit-Bold",
+      ios: "Outfit-Bold",
+    }),
     inputBg: "#2C2C2C",
     toolbarBg: "#2C2C2C",
     toolbarIcon: "#CCC",
@@ -168,7 +188,7 @@ const NativeTodoEditor = ({ items, setItems, theme }) => {
             <TextInput
               style={[
                 styles.todoInput,
-                { color: theme.text },
+                { color: theme.text, fontFamily: fontFamily },
                 item.checked && [
                   styles.todoInputChecked,
                   { color: theme.textSecondary },
@@ -190,7 +210,7 @@ const NativeTodoEditor = ({ items, setItems, theme }) => {
         ))}
         <TouchableOpacity onPress={addItem} style={styles.addTodoBtn}>
           <Plus size={20} color={palette.primaryBlue} />
-          <Text style={[styles.addTodoText, { color: palette.primaryBlue }]}>
+          <Text style={[styles.addTodoText, { color: palette.primaryBlue, fontFamily: fontFamilyBold }]}>
             Add Item
           </Text>
         </TouchableOpacity>
@@ -423,7 +443,7 @@ const EditorScreen = ({ route, navigation }) => {
             multiline
           />
 
-          <Text style={[styles.dateText, { color: theme.textSecondary }]}>
+          <Text style={[styles.dateText, { color: theme.textSecondary, fontFamily: fontFamily }]}>
             {new Date().toLocaleDateString("en-US", {
               weekday: "short",
               day: "numeric",
@@ -619,7 +639,7 @@ const HomeScreen = ({ navigation }) => {
         onPress={() => navigation.navigate("Editor", { noteToEdit: note })}
       >
         <Text
-          style={[styles.cardTitle, { color: textColor }]}
+          style={[styles.cardTitle, { color: textColor, fontFamily: fontFamily }]}
           numberOfLines={2}
         >
           {note.title}
@@ -683,7 +703,7 @@ const HomeScreen = ({ navigation }) => {
           </Text>
         )}
 
-        <Text style={[styles.cardTime, { color: dateColor }]}>{note.date}</Text>
+        <Text style={[styles.cardTime, { color: dateColor, fontFamily: fontFamily }]}>{note.date}</Text>
       </TouchableOpacity>
     );
   };
@@ -832,7 +852,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
         {filteredNotes.length === 0 && (
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+          <Text style={[styles.emptyText, { color: theme.textSecondary, fontFamily: fontFamily }]}>
             No notes found.
           </Text>
         )}
@@ -853,12 +873,34 @@ const HomeScreen = ({ navigation }) => {
 // --- MAIN APP ---
 const App = () => {
   const [themeMode, setThemeMode] = useState("light");
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadFonts = async () => {
+      try {
+        await Font.loadAsync({
+          "Outfit-Regular": Outfit_400Regular,
+          "Outfit-Bold": Outfit_700Bold,
+        });
+        setFontsLoaded(true);
+      } catch (error) {
+        console.error("Error loading fonts:", error);
+        setFontsLoaded(true); // Continue anyway
+      }
+    };
+
+    loadFonts();
+  }, []);
 
   const switchTheme = (mode) => {
     setThemeMode(mode);
   };
 
   const theme = themes[themeMode];
+
+  if (!fontsLoaded) {
+    return null; // Or a loading screen
+  }
 
   return (
     <SafeAreaProvider>
@@ -874,13 +916,24 @@ const App = () => {
   );
 };
 
+// --- FONT CONFIG ---
+const fontFamily = Platform.select({
+  android: "Outfit-Regular",
+  ios: "Outfit-Regular",
+});
+
+const fontFamilyBold = Platform.select({
+  android: "Outfit-Bold",
+  ios: "Outfit-Bold",
+});
+
 // --- STYLES ---
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, fontFamily: fontFamily },
   homeHeader: { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 10 },
   headerRow: { flexDirection: "row", alignItems: "center", gap: 15 },
   iconCircle: { padding: 8, borderRadius: 50 },
-  headerTitle: { fontSize: 28, fontWeight: "bold" },
+  headerTitle: { fontSize: 28, fontWeight: "bold", fontFamily: fontFamilyBold },
   searchContainer: {
     marginHorizontal: 24,
     marginVertical: 10,
@@ -893,26 +946,27 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     fontSize: 16,
     elevation: 0,
+    fontFamily: fontFamily,
   },
   searchIcon: { position: "absolute", left: 15, top: 14, zIndex: 1 },
   categoryScroll: { paddingHorizontal: 24, gap: 10, alignItems: "center" },
   categoryChip: {
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
-    borderWidth: 1,
+    borderWidth: 0,
   },
   categoryChipActive: {},
   categoryChipInactive: {},
-  categoryChipText: { fontSize: 14, fontWeight: "600" },
+  categoryChipText: { fontSize: 14, fontWeight: "600", fontFamily: fontFamily },
   scrollContent: { paddingBottom: 100, paddingTop: 10 },
   masonryContainer: { flexDirection: "row", paddingHorizontal: 16, gap: 12 },
   column: { flex: 1, gap: 12 },
   noteCard: { borderRadius: 24, padding: 18, marginBottom: 4 },
-  cardTitle: { fontSize: 17, fontWeight: "bold", marginBottom: 8 },
-  cardPreview: { fontSize: 14, lineHeight: 20, marginBottom: 12 },
+  cardTitle: { fontSize: 17, fontWeight: "bold", marginBottom: 8, fontFamily: fontFamilyBold },
+  cardPreview: { fontSize: 14, lineHeight: 20, marginBottom: 12, fontFamily: fontFamily },
   cardImage: { width: "100%", height: 120, borderRadius: 12, marginBottom: 12 },
-  cardTime: { fontSize: 11, fontWeight: "600" },
+  cardTime: { fontSize: 11, fontWeight: "600", fontFamily: fontFamily },
   emptyText: { textAlign: "center", marginTop: 50 },
   fabContainer: {
     position: "absolute",
@@ -970,7 +1024,7 @@ const styles = StyleSheet.create({
   },
   dropdownItem: { paddingVertical: 10, paddingHorizontal: 16 },
   titleInput: { fontSize: 32, fontWeight: "800", marginVertical: 10 },
-  dateText: { fontSize: 13, fontWeight: "500", marginBottom: 20 },
+  dateText: { fontSize: 13, fontWeight: "500", marginBottom: 20 , fontFamily: fontFamily },
   floatingToolbarContainer: {
     marginHorizontal: 16,
     marginBottom: 10,
@@ -1002,7 +1056,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   todoCheckedDot: { width: 14, height: 14, borderRadius: 4 },
-  todoInput: { flex: 1, fontSize: 18, paddingTop: 0 },
+  todoInput: { flex: 1, fontSize: 18, paddingTop: 0, fontFamily: fontFamily },
   todoInputChecked: { textDecorationLine: "line-through" },
   addTodoBtn: {
     flexDirection: "row",
@@ -1011,7 +1065,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 5,
   },
-  addTodoText: { fontSize: 16, fontWeight: "600" },
+  addTodoText: { fontSize: 16, fontWeight: "600", fontFamily: fontFamilyBold },
 
   // Mini Todo Preview Styles
   miniTodoItem: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
@@ -1026,7 +1080,7 @@ const styles = StyleSheet.create({
   },
   miniTodoCheckFilled: { backgroundColor: "#555", borderColor: "#555" },
   miniTodoDot: { width: 6, height: 6, borderRadius: 2 },
-  miniTodoText: { fontSize: 13, flex: 1 },
+  miniTodoText: { fontSize: 13, flex: 1, fontFamily: fontFamily },
 
   // Modal Styles
   modalOverlay: {
