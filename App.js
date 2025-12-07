@@ -109,7 +109,7 @@ const themes = {
     textSecondary: "#AAAAAA",
         fontFamily: Platform.select({
       android: "Outfit-Regular",
-      ios: "Outfit-Regular", // Ensure the font is linked correctly
+      ios: "Outfit-Regular",
     }),
     fontFamilyBold: Platform.select({
       android: "Outfit-Bold",
@@ -229,6 +229,13 @@ const EditorScreen = ({ route, navigation }) => {
   const [title, setTitle] = useState(noteToEdit ? noteToEdit.title : "");
   const [category, setCategory] = useState(noteToEdit?.category || "Work");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  // Locked State
+  const [isLocked, setIsLocked] = useState(noteToEdit?.isLocked || false);
+  
+  // Change PIN State
+  const [isPinModalVisible, setIsPinModalVisible] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
 
   // HTML Mode State
   const [descHTML, setDescHTML] = useState(
@@ -298,35 +305,70 @@ const EditorScreen = ({ route, navigation }) => {
       richText.current?.insertHTML("<br />");
     }
   };
+  
+  const handleChangePin = () => {
+    if (newPin.length !== 4 || confirmPin.length !== 4) {
+      Alert.alert("Error", "Enter 4 digits!");
+      return;
+    }
+    if (newPin !== confirmPin) {
+      Alert.alert("Error", "PIN did not match.");
+      return;
+    }
+
+    setIsPinModalVisible(false);
+    Alert.alert("Success", "PIN saved.");
+  };
 
   const handleSave = async () => {
     let finalContent = descHTML;
     if (category === "To-Do") {
       finalContent = todosToHtml(todoItems);
     }
+    
+    const noteId = noteToEdit ? noteToEdit.id : Date.now().toString();
+
+    const finalPin = newPin || noteToEdit?.lockPin || "1234"; 
 
     const newNote = {
-      id: noteToEdit ? noteToEdit.id : Date.now().toString(),
+      id: noteId,
       title: title || "Untitled Note",
       content: finalContent,
       category: category,
       date: new Date().toLocaleDateString(),
+      isLocked: isLocked,
+      lockPin: isLocked ? finalPin : null, 
     };
 
     try {
-      const existingNotes = await AsyncStorage.getItem("NOTES");
-      let notes = existingNotes ? JSON.parse(existingNotes) : [];
-
+      const existingNotesRaw = await AsyncStorage.getItem("NOTES");
+      let notes = existingNotesRaw ? JSON.parse(existingNotesRaw) : [];
+      
+      console.log(`[Save] Saving note ID: ${noteId}, LockPin: ${newNote.lockPin}`);
+      
       if (noteToEdit) {
         const index = notes.findIndex((n) => n.id === noteToEdit.id);
-        notes[index] = newNote;
+        if (index !== -1) {
+          notes[index] = newNote;
+          console.log(`[Save] Updated existing note at index: ${index}`);
+        } else {
+          notes.push(newNote);
+        }
       } else {
         notes.push(newNote);
       }
+      
       await AsyncStorage.setItem("NOTES", JSON.stringify(notes));
+      console.log("[Save] Data saved to AsyncStorage. Navigating back.");
+      
+      setNewPin('');
+      setConfirmPin('');
+      
       navigation.goBack();
+      
     } catch (e) {
-      console.error(e);
+      Alert.alert("Save Failed", `Could not save note: ${e.message}`);
+      console.error("[Save Error]", e);
     }
   };
 
@@ -365,6 +407,82 @@ const EditorScreen = ({ route, navigation }) => {
       <StatusBar
         barStyle={theme.mode === "dark" ? "light-content" : "dark-content"}
       />
+      
+      {/* Change PIN Modal */}
+      <Modal
+        transparent={true}
+        visible={isPinModalVisible}
+        animationType="fade"
+        onRequestClose={() => setIsPinModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsPinModalVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[
+              styles.changePinModal,
+              { backgroundColor: theme.cardBg, borderColor: theme.borderColor },
+            ]}
+          >
+            <Text style={[styles.menuTitle, { color: theme.text, fontFamily: fontFamilyBold, marginBottom: 10 }]}>
+              Change Note PIN
+            </Text>
+            
+            <Text style={[styles.pinModalLabel, { color: theme.textSecondary, fontFamily: fontFamily }]}>
+              New PIN (4 Digit)
+            </Text>
+            
+            <TextInput
+              style={[styles.pinInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.borderColor, fontFamily: fontFamilyBold }]}
+              placeholder=""
+              placeholderTextColor={theme.textSecondary}
+              keyboardType="numeric"
+              maxLength={4}
+              value={newPin}
+              onChangeText={setNewPin}
+              secureTextEntry
+              autoFocus={true}
+            />
+            
+            <Text style={[styles.pinModalLabel, { color: theme.textSecondary, fontFamily: fontFamily, marginTop: 10 }]}>
+              Confirm New PIN
+            </Text>
+
+            <TextInput
+              style={[styles.pinInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.borderColor, fontFamily: fontFamilyBold, marginBottom: 20 }]}
+              placeholder=""
+              placeholderTextColor={theme.textSecondary}
+              keyboardType="numeric"
+              maxLength={4}
+              value={confirmPin}
+              onChangeText={setConfirmPin}
+              secureTextEntry
+            />
+            
+            <TouchableOpacity
+              style={[styles.unlockButton, { backgroundColor: palette.primaryBlue }]}
+              onPress={handleChangePin}
+            >
+              <Text style={{ color: "white", fontWeight: "bold", fontFamily: fontFamilyBold }}>
+                Set New PIN
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity onPress={() => {
+              setIsPinModalVisible(false);
+              setNewPin('');
+              setConfirmPin('');
+            }}>
+              <Text style={[styles.cancelText, { color: theme.textSecondary, fontFamily: fontFamily }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       <View style={styles.editorHeader}>
         <TouchableOpacity
@@ -417,16 +535,43 @@ const EditorScreen = ({ route, navigation }) => {
             </View>
           )}
         </View>
+        
+        <View style={{ flexDirection: 'row', gap: 10 }}> 
+          {isLocked && (
+            <TouchableOpacity
+              onPress={() => setIsPinModalVisible(true)}
+              style={[styles.iconBtn, { backgroundColor: theme.inputBg }]}
+            >
+              <MoreVertical color={theme.text} size={24} />
+            </TouchableOpacity>
+          )}
 
-        <TouchableOpacity
-          onPress={handleDelete}
-          style={[styles.iconBtn, { backgroundColor: theme.inputBg }]}
-        >
-          <Trash2
+          <TouchableOpacity
+            onPress={() => {
+              setIsLocked(!isLocked);
+              if (isLocked) {
+                setNewPin('');
+                setConfirmPin('');
+              }
+            }}
+            style={[styles.iconBtn, { backgroundColor: theme.inputBg }]}
+          >
+            <Lock
+              color={isLocked ? palette.primaryBlue : theme.text}
+              size={24}
+            />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={handleDelete}
+            style={[styles.iconBtn, { backgroundColor: theme.inputBg }]}
+          >
+            <Trash2
             color={noteToEdit ? "#FF6B6B" : theme.textSecondary}
             size={24}
-          />
-        </TouchableOpacity>
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -562,6 +707,10 @@ const HomeScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  const [isLockModalVisible, setIsLockModalVisible] = useState(false);
+  const [currentLockedNote, setCurrentLockedNote] = useState(null);
+  const [pinInput, setPinInput] = useState("");
 
   useFocusEffect(
     useCallback(() => {
@@ -579,6 +728,47 @@ const HomeScreen = ({ navigation }) => {
     } catch (e) {
       console.error(e);
     }
+  };
+  
+  const handleUnlock = () => {
+    if (currentLockedNote && pinInput === currentLockedNote.lockPin) {
+      navigation.navigate("Editor", { noteToEdit: currentLockedNote });
+      
+      setPinInput("");
+      setIsLockModalVisible(false);
+      setCurrentLockedNote(null);
+    } else {
+      Alert.alert("Failed", "Wrong PIN.");
+      setPinInput("");
+    }
+  };
+  
+  // NEW: Emergency Delete Handler
+  const handleEmergencyDelete = async (note) => {
+    Alert.alert(
+        "Emergency Delete", 
+        "Are you sure you want to permanently delete this locked note? This action cannot be undone. (Use this feature only if you forgot your PIN)", 
+        [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "DELETE",
+                style: "destructive",
+                onPress: async () => {
+                    try {
+                        const existingNotes = await AsyncStorage.getItem("NOTES");
+                        let notes = existingNotes ? JSON.parse(existingNotes) : [];
+                        notes = notes.filter((n) => n.id !== note.id);
+                        await AsyncStorage.setItem("NOTES", JSON.stringify(notes));
+                        // Refresh list
+                        getNotes(); 
+                        Alert.alert("Success", "Catatan berhasil dihapus.");
+                    } catch (e) {
+                        console.error(e);
+                        Alert.alert("Error", "Gagal menghapus catatan.");
+                    }
+                },
+            },
+        ]);
   };
 
   const filteredNotes = notes.filter((note) => {
@@ -637,71 +827,99 @@ const HomeScreen = ({ navigation }) => {
       <TouchableOpacity
         key={note.id}
         style={[styles.noteCard, { backgroundColor: cardColor }]}
-        onPress={() => navigation.navigate("Editor", { noteToEdit: note })}
+        onPress={() => {
+          if (note.isLocked) {
+            setCurrentLockedNote(note);
+            setIsLockModalVisible(true);
+          } else {
+            navigation.navigate("Editor", { noteToEdit: note });
+          }
+        }}
+        onLongPress={() => {
+            if (note.isLocked) {
+                handleEmergencyDelete(note);
+            }
+        }}
       >
         <Text
-          style={[styles.cardTitle, { color: textColor, fontFamily: fontFamily }]}
+          style={[styles.cardTitle, { color: textColor, fontFamily: fontFamilyBold }]}
           numberOfLines={2}
         >
           {note.title}
         </Text>
 
-        {firstImage && (
-          <Image
-            source={{ uri: firstImage }}
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
-        )}
 
-        {note.category === "To-Do" && todoPreviews.length > 0 ? (
-          <View style={{ marginTop: 5, marginBottom: 10 }}>
-            {todoPreviews.map((item, idx) => (
-              <View key={idx} style={styles.miniTodoItem}>
-                <View
-                  style={[
-                    styles.miniTodoCheck,
-                    item.checked && styles.miniTodoCheckFilled,
-                    { borderColor: textColor },
-                  ]}
-                >
-                  {item.checked && (
-                    <View
-                      style={[
-                        styles.miniTodoDot,
-                        { backgroundColor: cardColor },
-                      ]}
-                    />
-                  )}
-                </View>
-                <Text
-                  style={[
-                    styles.miniTodoText,
-                    { color: textColor },
-                    item.checked && {
-                      textDecorationLine: "line-through",
-                      opacity: 0.5,
-                    },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {item.text}
-                </Text>
-              </View>
-            ))}
-            {todoPreviews.length === 5 && (
-              <Text style={{ fontSize: 10, color: dateColor, marginLeft: 20 }}>
-                ...
-              </Text>
-            )}
+        {note.isLocked ? (
+          <View style={styles.lockedContent}>
+            <Lock size={36} color={dateColor} />
+            <Text style={[styles.cardPreview, { color: dateColor, textAlign: 'center', fontFamily: fontFamily }]}>
+              Content is locked
+            </Text>
+            <Text style={[styles.cardTime, { color: dateColor, fontFamily: fontFamily, marginTop: 5 }]}>
+              (Hold to delete note)
+            </Text>
           </View>
         ) : (
-          <Text
-            style={[styles.cardPreview, { color: textColor }]}
-            numberOfLines={firstImage ? 3 : 6}
-          >
-            {textPreview || "No content"}
-          </Text>
+
+          <>
+            {firstImage && (
+              <Image
+                source={{ uri: firstImage }}
+                style={styles.cardImage}
+                resizeMode="cover"
+              />
+            )}
+
+            {note.category === "To-Do" && todoPreviews.length > 0 ? (
+              <View style={{ marginTop: 5, marginBottom: 10 }}>
+                {todoPreviews.map((item, idx) => (
+                  <View key={idx} style={styles.miniTodoItem}>
+                    <View
+                      style={[
+                        styles.miniTodoCheck,
+                        item.checked && styles.miniTodoCheckFilled,
+                        { borderColor: textColor },
+                      ]}
+                    >
+                      {item.checked && (
+                        <View
+                          style={[
+                            styles.miniTodoDot,
+                            { backgroundColor: cardColor },
+                          ]}
+                        />
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.miniTodoText,
+                        { color: textColor, fontFamily: fontFamily },
+                        item.checked && {
+                          textDecorationLine: "line-through",
+                          opacity: 0.5,
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.text}
+                    </Text>
+                  </View>
+                ))}
+                {todoPreviews.length === 5 && (
+                  <Text style={{ fontSize: 10, color: dateColor, marginLeft: 20, fontFamily: fontFamily }}>
+                    ...
+                  </Text>
+                )}
+              </View>
+            ) : (
+              <Text
+                style={[styles.cardPreview, { color: textColor, fontFamily: fontFamily }]}
+                numberOfLines={firstImage ? 3 : 6}
+              >
+                {textPreview || "No content"}
+              </Text>
+            )}
+          </>
         )}
 
         <Text style={[styles.cardTime, { color: dateColor, fontFamily: fontFamily }]}>{note.date}</Text>
@@ -723,7 +941,7 @@ const HomeScreen = ({ navigation }) => {
           >
             <Menu size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>
+          <Text style={[styles.headerTitle, { color: theme.text, fontFamily: fontFamilyBold }]}>
             NOTEKU
           </Text>
         </View>
@@ -782,6 +1000,72 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       </Modal>
 
+      <Modal
+        transparent={true}
+        visible={isLockModalVisible}
+        animationType="fade"
+        onRequestClose={() => {
+          setIsLockModalVisible(false);
+          setPinInput("");
+        }}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => {
+            setIsLockModalVisible(false);
+            setPinInput("");
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[
+              styles.lockModal,
+              { backgroundColor: theme.cardBg, borderColor: theme.borderColor },
+            ]}
+          >
+            <Text style={[styles.menuTitle, { color: theme.text, fontFamily: fontFamilyBold, marginBottom: 10 }]}>
+              Enter PIN (Default: 1234)
+            </Text>
+            <TextInput
+              style={[
+                styles.pinInput,
+                { 
+                  backgroundColor: theme.inputBg, 
+                  color: theme.text, 
+                  borderColor: theme.borderColor,
+                  fontFamily: fontFamilyBold
+                }
+              ]}
+              placeholder="****"
+              placeholderTextColor={theme.textSecondary}
+              keyboardType="numeric"
+              maxLength={4}
+              value={pinInput}
+              onChangeText={setPinInput}
+              secureTextEntry
+              autoFocus={true}
+            />
+            <TouchableOpacity
+              style={[styles.unlockButton, { backgroundColor: palette.primaryBlue }]}
+              onPress={handleUnlock}
+            >
+              <Text style={{ color: "white", fontWeight: "bold", fontFamily: fontFamilyBold }}>
+                Unlock
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {
+              setIsLockModalVisible(false);
+              setPinInput("");
+            }}>
+              <Text style={[styles.cancelText, { color: theme.textSecondary, fontFamily: fontFamily }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       <View style={styles.searchContainer}>
         <Search
           size={20}
@@ -791,7 +1075,7 @@ const HomeScreen = ({ navigation }) => {
         <TextInput
           style={[
             styles.searchInput,
-            { backgroundColor: theme.inputBg, color: theme.text },
+            { backgroundColor: theme.inputBg, color: theme.text, fontFamily: fontFamily },
           ]}
           placeholder="Search notes..."
           placeholderTextColor={theme.textSecondary}
@@ -965,10 +1249,19 @@ const styles = StyleSheet.create({
   column: { flex: 1, gap: 12 },
   noteCard: { borderRadius: 24, padding: 18, marginBottom: 4 },
   cardTitle: { fontSize: 17, fontWeight: "bold", marginBottom: 8, fontFamily: fontFamilyBold },
+  
+  lockedContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 120,
+    marginVertical: 10,
+  },
+  
   cardPreview: { fontSize: 14, lineHeight: 20, marginBottom: 12, fontFamily: fontFamily },
   cardImage: { width: "100%", height: 120, borderRadius: 12, marginBottom: 12 },
   cardTime: { fontSize: 11, fontWeight: "600", fontFamily: fontFamily },
-  emptyText: { textAlign: "center", marginTop: 50 },
+  emptyText: { textAlign: "center", marginTop: 50, fontFamily: fontFamily },
   fabContainer: {
     position: "absolute",
     bottom: 30,
@@ -1040,7 +1333,6 @@ const styles = StyleSheet.create({
   },
   richToolbar: { borderTopWidth: 0, borderRadius: 24 },
 
-  // Todo Editor Styles
   todoItem: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -1068,7 +1360,6 @@ const styles = StyleSheet.create({
   },
   addTodoText: { fontSize: 16, fontWeight: "600", fontFamily: fontFamilyBold },
 
-  // Mini Todo Preview Styles
   miniTodoItem: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   miniTodoCheck: {
     width: 14,
@@ -1083,7 +1374,6 @@ const styles = StyleSheet.create({
   miniTodoDot: { width: 6, height: 6, borderRadius: 2 },
   miniTodoText: { fontSize: 13, flex: 1, fontFamily: fontFamily },
 
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -1111,6 +1401,52 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: palette.primaryBlue,
     marginLeft: "auto",
+  },
+  lockModal: {
+    width: 280,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    elevation: 10,
+    alignItems: 'center',
+  },
+  changePinModal: {
+    width: 280,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    elevation: 10,
+    alignItems: 'center',
+  },
+  pinInput: {
+    width: '100%',
+    textAlign: 'center',
+    fontSize: 24,
+    letterSpacing: 10,
+    paddingVertical: 10,
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    fontWeight: 'bold',
+  },
+  pinModalLabel: {
+    fontSize: 14,
+    marginBottom: 5,
+    alignSelf: 'flex-start',
+    fontWeight: '600',
+    fontFamily: fontFamily,
+  },
+  unlockButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  cancelText: {
+    marginTop: 5,
+    fontSize: 14,
   },
 });
 
