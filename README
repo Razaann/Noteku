@@ -1,0 +1,58 @@
+NOTEKU: APLIKASI CATATAN
+Aplikasi pencatatan modern berbasis React Native yang mengutamakan produktivitas dan estetika.
+
+FITUR APLIKASI
+1. Halaman Utama (Home Screen)
+     -Search Bar
+          Lokasi: Bagian paling atas layar.
+          Fungsi: Ketik kata kunci di sini untuk menyaring catatan. Hasil pencarian akan muncul secara instan (real-time) saat Anda mengetik judul atau isi catatan.
+
+     -Filter Kategori
+          Lokasi: Barisan tombol oval di bawah kolom pencarian.
+          Fungsi: Geser (scroll) ke samping dan ketik salah satu tombol (All, Work, Ideas, To-Do) untuk hanya menampilkan catatan dari kategori tersebut. Tombol yang aktif akan berubah warna menjadi hitam (atau putih di mode gelap).
+
+     -Grid Catatan
+          Lokasi: Area tengah layar yang memuat daftar catatan.
+          Tampilan: Catatan ditampilkan dalam bentuk kartu dua kolom.
+          Indikator Visual: Warna kartu berbeda-beda sesuai kategori (Kuning untuk Work, Pink untuk Ideas, Biru untuk To-Do). Kartu juga menampilkan pratinjau singkat (teks atau checklist) dan tanggal pembuatan.
+
+     -Tombol Add Notes
+          Lokasi: Tombol bulat besar melayang di pojok bawah tengah.
+          Fungsi: Tekan tombol ini untuk segera membuka halaman editor dan membuat catatan baru.
+
+     -Tombol Menu
+          Lokasi: Ikon garis tiga di pojok kiri atas (sebelah judul "NOTEKU").
+          Fungsi: Membuka jendela pop-up kecil untuk mengganti tampilan aplikasi antara Light Mode (Terang) dan Dark Mode (Gelap).
+
+2. Halaman Editor (Editor Screen)
+     -Penilih Kategori
+          Lokasi: Tombol berbentuk kapsul di bagian atas tengah layar.
+          Fungsi: Menampilkan kategori saat ini. Jika diklik, akan memunculkan menu untuk memindahkan catatan ke kategori lain (misalnya dari Work ke To-Do).
+
+     -Ikon Hapus
+          Lokasi: Pojok kanan atas.
+          Fungsi: Menghapus catatan secara permanen. Akan muncul konfirmasi keamanan sebelum data dihapus.
+
+     -Judul
+          Lokasi: Teks besar di bawah header.
+          Fungsi: Tempat mengetik judul utama catatan Anda.
+
+     -Toolbar
+          Lokasi: Baris ikon yang muncul tepat di atas keyboard saat mengetik (kecuali di mode To-Do).
+          Fungsi:
+               -B / I / U: Menebalkan, memiringkan, atau menggarisbawahi teks.
+               -H1: Mengubah teks menjadi ukuran judul besar (Heading).
+               -List: Membuat poin-poin (bullet) atau nomor.
+               -Undo/Redo: Panah lengkung untuk membatalkan kesalahan ketik.
+               -Ikon Gambar: Membuka galeri HP untuk menyisipkan foto langsung ke dalam teks.
+
+     -Tampilan Checklist (Khusus Mode To-Do)
+          Tampilan: Toolbar format akan hilang dan digantikan oleh daftar item dengan kotak centang.
+
+
+
+Install Library:
+     npm install react-native-safe-area-context react-native-pell-rich-editor lucide-react-native expo-image-picker
+
+Mulai Program:
+     npx expo start
