@@ -761,10 +761,10 @@ const HomeScreen = ({ navigation }) => {
                         await AsyncStorage.setItem("NOTES", JSON.stringify(notes));
                         // Refresh list
                         getNotes(); 
-                        Alert.alert("Success", "Catatan berhasil dihapus.");
+                        Alert.alert("Success", "Note successfully deleted.");
                     } catch (e) {
                         console.error(e);
-                        Alert.alert("Error", "Gagal menghapus catatan.");
+                        Alert.alert("Error", "Failed to delete note.");
                     }
                 },
             },
